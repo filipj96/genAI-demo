@@ -5,22 +5,24 @@ import { ChatIntro } from "../ChatIntro/ChatIntro";
 import { UserMessage } from "../UserMessage/UserMessage";
 import { AssistantMessage } from "../AssistantMessage/AssistantMessage";
 import { ChatHeader } from "../ChatHeader";
-
-interface ChatPair {
-  question: string;
-  answer: string;
-  followUpQuestions?: string[]; // Now an array, optional follow up question, probably should be a part of a answer object
-}
+import { ChatRequest, ChatTurn, chatApi } from "../../api";
 
 export const Chat: React.FC = () => {
   const currentQuestion = useRef("");
-  const [chatHistory, setChatHistory] = useState<ChatPair[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatTurn[]>([]);
 
-  const handleSubmit = (message: string) => {
+  const handleSubmit = async (message: string) => {
     currentQuestion.current = message;
 
     // Here you would typically call your chatbot API and get the answer.
     // For this example, let's simulate this with a timeout function.
+    const request: ChatRequest = {
+      history: chatHistory,
+    };
+
+    const result = await chatApi(request);
+    console.log(result);
+
     setTimeout(() => {
       const answer = `Answer to "${message}"`; // replace this with real answer
       const followUpQuestions = getFollowUpQuestions(message);
@@ -57,12 +59,12 @@ export const Chat: React.FC = () => {
           {chatHistory.length === 0 ? (
             <ChatIntro onExampleClick={handleSubmit} />
           ) : (
-            chatHistory.map((chatPair, index) => (
+            chatHistory.map((ChatTurn, index) => (
               <div key={index}>
-                <UserMessage message={chatPair.question} />
+                <UserMessage message={ChatTurn.question} />
                 <AssistantMessage
-                  message={chatPair.answer}
-                  followUpQuestions={chatPair.followUpQuestions}
+                  message={ChatTurn.answer}
+                  followUpQuestions={ChatTurn.followUpQuestions}
                   onFollowUpClick={handleSubmit}
                 />
               </div>
