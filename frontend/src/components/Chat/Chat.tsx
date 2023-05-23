@@ -40,7 +40,7 @@ export const Chat: React.FC = () => {
     // Mock logic for generating follow-up questions based on the user's question
     if (question.toLowerCase().includes("weather")) {
       return [
-        "Would you like to know tomorrow's weather as well?",
+        "Would you like to know tomorrow's weather?",
         "How about the weather for the next week?",
         "Today?",
       ];

@@ -1,0 +1,13 @@
+.intro-question-container {
+  display: inline-block;
+  background-color: #e8ebfa;
+  border-radius: 5px;
+  cursor: pointer;
+  word-break: break-word;
+  padding: 0px 3px;
+  margin: 3px 0px;
+}
+
+.intro-question-list-item {
+    line-height: 30%;
+  }

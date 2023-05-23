@@ -2,7 +2,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* border-bottom: 1px solid #ddd; */
   padding: 5px;
-  background-color: #eee;
+  background-color: black;
+}
+
+.chat-header p {
+  color: #ffff;
 }

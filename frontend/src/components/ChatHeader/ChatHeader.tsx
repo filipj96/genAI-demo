@@ -11,7 +11,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ onClearChat }) => {
   return (
     <div className="chat-header">
       <p>Virtual Assistant</p>
-      <Button onClick={onClearChat} icon={<BroomRegular />} />
+      <Button onClick={onClearChat} appearance="transparent" icon={<BroomRegular primaryFill="white"/>} />
     </div>
   );
 };
