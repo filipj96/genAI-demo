@@ -11,17 +11,17 @@ export const Chat: React.FC = () => {
   const currentQuestion = useRef("");
   const [chatHistory, setChatHistory] = useState<ChatTurn[]>([]);
 
-  const handleSubmit = async (message: string) => {
+  const handleSubmit = (message: string) => {
     currentQuestion.current = message;
 
     // Here you would typically call your chatbot API and get the answer.
     // For this example, let's simulate this with a timeout function.
-    const request: ChatRequest = {
-      history: chatHistory,
-    };
+    //const request: ChatRequest = {
+    //  history: chatHistory,
+    //};
 
-    const result = await chatApi(request);
-    console.log(result);
+    //const result = await chatApi(request);
+    //console.log(result);
 
     setTimeout(() => {
       const answer = `Answer to "${message}"`; // replace this with real answer
