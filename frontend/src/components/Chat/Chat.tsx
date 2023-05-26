@@ -16,6 +16,7 @@ export const Chat: React.FC = () => {
 
     // Here you would typically call your chatbot API and get the answer.
     // For this example, let's simulate this with a timeout function.
+
     //const request: ChatRequest = {
     //  history: chatHistory,
     //};
