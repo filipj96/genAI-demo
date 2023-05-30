@@ -1,7 +1,6 @@
 import openai
 from collections import deque
 from api import systembolaget_search
-import json
 
 
 def mock_keywords():
@@ -16,19 +15,34 @@ Sources:
 {sources}\n
 """
 
+    follow_up_questions = """Generate three very brief follow-up questions that the user would likely ask next about their healthcare plan and employee handbook. 
+    Use double angle brackets to reference the questions, e.g. <<Do you prefer bolder or lighter wines?>>.
+    Try not to repeat questions that have already been asked.
+    Only generate questions and do not generate any text before or after the questions, such as 'Next Questions'
+"""
+
     def run(self, history: list[dict]):
 
         # Step 3(?) - Genereate keywords that can be used in search
         search_keywords = mock_keywords()
 
         # Step 4(?) - Search Systembolaget
+        # This should probably be cached, should not make the same search if not needed. Could use embedding vectors to compare the key words generated.
+        # More advanced implementation could be to mimin ReAct paper, i.e. implement actions for to bot to take
         products = systembolaget_search(search_keywords)
         products = self.systemet_product_list_to_string([products[0]])
         self.system_message = self.system_message.format(sources=products, follow_up_questions_prompt="whatever")
         print(self.system_message)
 
         # Step 5(?) - Get wine recommendation or follow up questions
-        #print(self.chat_history_chat_format(history))
+        messages = self.chat_history_chat_format(history)
+        completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)
+        reply = completion["choices"][0]["message"]["content"]
+        print(reply)
+
+        # Step 6 return response object
+        # Response object should look like {answer: OpenAI text response, products: raw list of products fetched from systembolaget, search_words: key words used to search systembolaget)
+        #return {"answer": reply, "products": products, "searchWords": search_keywords}
 
     def chat_history_chat_format(self, history: list[dict], approx_max_tokens=1000):
         messages_deque = deque()

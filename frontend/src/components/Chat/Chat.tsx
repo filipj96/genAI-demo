@@ -5,50 +5,44 @@ import { ChatIntro } from "../ChatIntro/ChatIntro";
 import { UserMessage } from "../UserMessage/UserMessage";
 import { AssistantMessage } from "../AssistantMessage/AssistantMessage";
 import { ChatHeader } from "../ChatHeader";
-import { ChatRequest, ChatTurn, chatApi } from "../../api";
+import { ChatRequest, AskResponse, ChatTurn, chatApi } from "../../api";
 
 export const Chat: React.FC = () => {
   const currentQuestion = useRef("");
   const [chatHistory, setChatHistory] = useState<ChatTurn[]>([]);
 
-  const handleSubmit = (message: string) => {
+  const handleSubmit = async (message: string) => {
     currentQuestion.current = message;
 
     // Here you would typically call your chatbot API and get the answer.
     // For this example, let's simulate this with a timeout function.
 
-    //const request: ChatRequest = {
-    //  history: chatHistory,
-    //};
-
-    //const result = await chatApi(request);
-    //console.log(result);
+    const request: ChatRequest = {
+      history: chatHistory,
+    };
+    const result: AskResponse = await chatApi(request);
+    setChatHistory((prevChatHistory) => [
+      ...prevChatHistory,
+      { question: message, answer: result.answer },
+    ]);
+    console.log(result);
 
     setTimeout(() => {
       const answer = `Answer to "${message}"`; // replace this with real answer
-      const followUpQuestions = getFollowUpQuestions(message);
       setChatHistory((prevChatHistory) => [
         ...prevChatHistory,
-        { question: message, answer, followUpQuestions },
+        { question: message, answer },
       ]);
     }, 1000);
+  };
+
+  const onExampleClick = (example: string) => {
+    handleSubmit(example);
   };
 
   const handleClearChat = () => {
     setChatHistory([]);
     currentQuestion.current = "";
-  };
-
-  const getFollowUpQuestions = (question: string) => {
-    // Mock logic for generating follow-up questions based on the user's question
-    if (question.toLowerCase().includes("weather")) {
-      return [
-        "Would you like to know tomorrow's weather?",
-        "How about the weather for the next week?",
-        "Today?",
-      ];
-    }
-    return undefined;
   };
 
   return (
@@ -58,14 +52,13 @@ export const Chat: React.FC = () => {
         <ChatHeader onClearChat={handleClearChat} />
         <div className="chat-content">
           {chatHistory.length === 0 ? (
-            <ChatIntro onExampleClick={handleSubmit} />
+            <ChatIntro onExampleClick={onExampleClick} />
           ) : (
             chatHistory.map((ChatTurn, index) => (
               <div key={index}>
                 <UserMessage message={ChatTurn.question} />
                 <AssistantMessage
                   message={ChatTurn.answer}
-                  followUpQuestions={ChatTurn.followUpQuestions}
                   onFollowUpClick={handleSubmit}
                 />
               </div>

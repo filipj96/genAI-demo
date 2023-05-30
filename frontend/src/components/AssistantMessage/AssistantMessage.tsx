@@ -1,25 +1,26 @@
 import React from "react";
 import "./AssistantMessage.css";
+import { assistantAnswerParser, ParsedAnswer } from "./AssistantAnswerParser"
 
 interface AssistantMessageProps {
   message: string;
-  followUpQuestions?: string[]; // Optional prop for follow-up questions
-  onFollowUpClick?: (followUpQuestions: string) => void; // Callback when a follow-up question is clicked
+  onFollowUpClick?: (followUpQuestions: string) => void;
 }
 
 export const AssistantMessage: React.FC<AssistantMessageProps> = ({
   message,
-  followUpQuestions,
   onFollowUpClick,
 }) => {
+  const parsedAnswer: ParsedAnswer = assistantAnswerParser(message)
+
   return (
     <div className="assistant-message">
       <div className="assistant-message-content">
-        {message}
-        {followUpQuestions && followUpQuestions.length > 0 && (
+        {parsedAnswer.parsedAnswer}
+        {parsedAnswer.followupQuestions && parsedAnswer.followupQuestions.length > 0 && (
           <div className="follow-up-questions">
             <span>Follow up questions: </span>
-            {followUpQuestions.map((followUpQuestion, index) => (
+            {parsedAnswer.followupQuestions.map((followUpQuestion, index) => (
               <p
                 key={index}
                 className="follow-up-question"
