@@ -9,7 +9,7 @@ export const ChatIntro: React.FC<ChatIntroProps> = ({ onExampleClick }) => {
   const examples = [
     "Ett rött vin som passar till grillat lamm",
     "Ett franskt balkongvin, rött",
-    "Ett gott vin från spanien",
+    "Ett gott vin från Spanien",
   ];
 
   return (
