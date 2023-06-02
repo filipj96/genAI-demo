@@ -9,16 +9,18 @@ def mock_keywords():
 
 class ChatReadRetriveRead():
 
-    system_message = """Mock system message
+    system_message = """Assistant is a sommelier that suggests red wines to the customer. Be brief in your answers and suggestions.
+Suggestions are ONLY allowed from the list of wines below. If there is not enough information below to make a wine suggestion, say you need more information to suggest. If asking a follow-up question to the user would help, ask the question.
+Do not generate answers that do not use the wine list below.
 {follow_up_questions_prompt}\n
-Sources:
+Wines:
 {sources}\n
 """
 
-    follow_up_questions = """Generate three very brief follow-up questions that the user would likely ask next about their healthcare plan and employee handbook. 
+    follow_up_questions = """Generate three very brief follow-up questions that will help you make a wine suggestion. 
     Use double angle brackets to reference the questions, e.g. <<Do you prefer bolder or lighter wines?>>.
     Try not to repeat questions that have already been asked.
-    Only generate questions and do not generate any text before or after the questions, such as 'Next Questions'
+    Politely let the user know you need some more information to make a suggestion.
 """
 
     def run(self, history: list[dict]):
