@@ -2,4 +2,7 @@
 geckodriver.log
 frontend/node_modules/**
 backend/static/**
-backend/.env
+**/.env
+**/.ipynb_checkpoints/**
+scraper/*.csv
+**/.DS_Store

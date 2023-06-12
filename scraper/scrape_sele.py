@@ -24,12 +24,16 @@ def scrape_product_details(url, driver: webdriver.Firefox, wait: WebDriverWait):
 
     # Find the first three elements matching the specified CSS selector and extract their 'aria-label' attribute
     taste_clocks = [element.get_attribute('aria-label') for element in driver.find_elements(By.CSS_SELECTOR, 'p.css-5frrl2.e78l9nd0')[:3]]
+
+    # Grapes
+    grapes = driver.find_element(By.CSS_SELECTOR, 'p.css-1l8wu88.enp2lf70').text
     
     # Write the product description to a text file
     with open('product_descriptions.txt', 'a') as f:
         f.write(product_name + ', ' + product_name_long + '\n')
         f.write(product_description + '\n')
         f.write('- ' + short_description.lower().capitalize() + '\n')  # Write the anchor text
+        f.write('- ' + grapes.lower().capitalize() + '\n')  # Write the anchor text
 
 
        # Write the taste_clocks, prefixed with '- '
@@ -64,11 +68,6 @@ def scrape_product_links(url):
         # Find all the anchor tags in the HTML
         # Filter out only the ones with id starting with 'tile:'
         product_links = [tag.get_attribute('href') for tag in driver.find_elements(By.TAG_NAME, 'a') if tag.get_attribute('id').startswith('tile:')]
-
-        # Write the links to a text file
-        #with open('product_links.txt', 'w') as f:
-        #    for link in product_links:
-        #        f.write(link + '\n')
 
         i = 0
         # Fetch the details of all products
