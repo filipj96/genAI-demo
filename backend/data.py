@@ -9,15 +9,14 @@ class SimpleDataStore():
         self.df = pd.read_csv(self.datafile_path)
         self.df["embedding"] = self.df.embedding.apply(eval).apply(array)
 
-    def search(self, embedding: list[float], n: int = 5):
+    def search(self, embedding: list[float], n: int = 5) -> list[str]:
         self.df["similarity"] = self.df.embedding.apply(
             lambda x: cosine_similarity(x, embedding))
-        results = (
+        results_series = (
             self.df.sort_values("similarity", ascending=False)
             .head(n)["combined"]
         )
-        return results
-
+        return results_series.tolist()
 
 if __name__ == '__main__':
     import os
