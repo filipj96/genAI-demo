@@ -1,4 +1,3 @@
-import os
 import requests
 from collections import deque
 import openai
@@ -71,6 +70,7 @@ Only generate keywords separated by commas, nothing else. ONLY generate keywords
 
 
 if __name__ == '__main__':
+    import os
     from dotenv import load_dotenv
     load_dotenv()
 
