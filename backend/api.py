@@ -3,6 +3,7 @@ import requests
 from collections import deque
 import openai
 
+
 def systembolaget_search(keywords: list[str]):
     url = "https://api-systembolaget.azure-api.net/sb-api-ecommerce/v1/productsearch/search"
     headers = {
@@ -49,42 +50,46 @@ def systembolaget_search(keywords: list[str]):
     return processed_products
 
 
-def get_keywords(history: list[dict], api_key: str = os.getenv("OPENAI_API_KEY")) -> list[str]:
-    # Works OK but not tested thoroughly
-    system_message = """Assistant is a sommelier that creates keywords from customer messages about wine.
-Only generate keywords separated by commas, nothing else. ONLY generate keywords relevant for a wine suggestion. Absolutely NOT any words that cannot be useful for a wine recommendation.
-Generate no more than 5 keywords.
+def get_chat_keywords(history: list[dict], api_key: str) -> list[str]:
+    keyword_system_message = """Assistant is a sommelier that creates keywords from customer messages about wine. The keyword should help assistant understand what type of wine the customer is looking for.
+Only generate keywords separated by commas, nothing else. ONLY generate keywords relevant for a wine suggestion.
 """
-
-    messages_deque = deque()
+    openai_model = "gpt-3.5-turbo"
+    user_messages_deque = deque()
     for h in reversed(history):
-        messages_deque.appendleft(
+        user_messages_deque.appendleft(
             {"role": "user", "content": h.get("question")})
-    messages_deque.appendleft(
-        {"role": "system", "content": system_message})
+    user_messages_deque.appendleft(
+        {"role": "system", "content": keyword_system_message})
 
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+    openai.api_key = api_key
     completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages_deque
+        model=openai_model,
+        messages=list(user_messages_deque)
     )
-    print(completion.choices[0].message)
-
-    return list(messages_deque)
+    return completion.choices[0].message
 
 
 if __name__ == '__main__':
-    print("api.py")
-    # systembolaget_search(['rött vin', 'lamm'])
+    from dotenv import load_dotenv
+    load_dotenv()
 
-    """ h = [{
-        "question": "What's the weather like today?",
+    print("api.py")
+    api_key = os.environ.get('OPENAI_API_KEY')
+
+    h = [{
+        "question": "I want a red wine.",
         "answer": "Answer to What's the weather like today?",
     }, {
-        "question": "How about the weather for the next week?",
+        "question": "Yes a fruity wine sounds nice.",
         "answer": "Answer to How about the weather for the next week?",
     }, {
-        "question": "Today?",
+        "question": "We are going to eat lamb. Perhaps a wine from Italy.",
         "answer": "Answer to Today?"
     }]
-    print(get_keywords(h)) """
+
+    k = get_chat_keywords(history=h, api_key=api_key)
+
+    print("OPENAI RESPONSE BELOW")
+    print(k)
+    print("OPENAI RESPONSE STOP")
