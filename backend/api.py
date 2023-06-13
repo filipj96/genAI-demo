@@ -75,16 +75,19 @@ if __name__ == '__main__':
     load_dotenv()
 
     api_key = os.environ.get('OPENAI_API_KEY')
-    h = [{
+    c = [{
         "question": "I want a red wine.",
-        "answer": "Answer to What's the weather like today?",
+        "answer": "I can help you with that. However I need to understand your preferences better. Do yo like fruity wines?",
     }, {
         "question": "Yes a fruity wine sounds nice.",
-        "answer": "Answer to How about the weather for the next week?",
+        "answer": "Are you planning to eat something with the wine?",
     }, {
-        "question": "We are going to eat lamb. Perhaps a wine from Italy.",
-        "answer": "Answer to Today?"
+        "question": "We are going to eat lamb. Perhaps a wine from Italy."
+    }]
+    c_small = [{
+        "question": "I want a red wine.",
+        "answer": "I can help you with that. However I need to understand your preferences better. Do yo like fruity wines?",
     }]
 
-    #k = get_chat_keywords(history=h, api_key=api_key)
+    #k = get_chat_keywords(history=c_small, api_key=api_key)
     #print(k)
