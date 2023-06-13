@@ -49,7 +49,7 @@ def systembolaget_search(keywords: list[str]):
     return processed_products
 
 
-def get_chat_keywords(history: list[dict], api_key: str) -> list[str]:
+def get_chat_keywords(history: list[dict], api_key: str) -> list[dict]:
     keyword_system_message = """Assistant is a sommelier that creates keywords from customer messages about wine. The keyword should help assistant understand what type of wine the customer is looking for.
 Only generate keywords separated by commas, nothing else. ONLY generate keywords relevant for a wine suggestion.
 """
@@ -74,9 +74,7 @@ if __name__ == '__main__':
     from dotenv import load_dotenv
     load_dotenv()
 
-    print("api.py")
     api_key = os.environ.get('OPENAI_API_KEY')
-
     h = [{
         "question": "I want a red wine.",
         "answer": "Answer to What's the weather like today?",
@@ -88,8 +86,5 @@ if __name__ == '__main__':
         "answer": "Answer to Today?"
     }]
 
-    k = get_chat_keywords(history=h, api_key=api_key)
-
-    print("OPENAI RESPONSE BELOW")
-    print(k)
-    print("OPENAI RESPONSE STOP")
+    #k = get_chat_keywords(history=h, api_key=api_key)
+    #print(k)
