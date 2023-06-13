@@ -1,13 +1,25 @@
+import sys
+import logging
 import openai
+from openai.embeddings_utils import get_embedding
 from collections import deque
-from api import systembolaget_search
+from api import get_chat_keywords
 
-
-def mock_keywords():
-    return ['rött vin', 'lamm']
+# Logging configuration
+log = logging.getLogger(__name__)
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(logging.Formatter(
+    '[%(asctime)s] %(levelname)s %(name)s : %(message)s'))
+log.addHandler(handler)
+log.setLevel(logging.INFO)
 
 
 class ChatReadRetriveRead():
+
+    def __init__(self, data_store, openai_api_key):
+        self.data_store = data_store
+        self.api_key = openai_api_key
+        self.embedding_model = "text-embedding-ada-002"
 
     system_message = """Assistant is a sommelier that suggests red wines to the customer. Be brief in your answers and suggestions.
 Suggestions are ONLY allowed from the list of wines below. If there is not enough information below to make a wine suggestion, say you need more information to suggest. If asking a follow-up question to the user would help, ask the question.
@@ -18,39 +30,51 @@ Wines:
 """
 
     follow_up_questions = """Generate three very brief follow-up questions that will help you make a wine suggestion. 
-    Use double angle brackets to reference the questions, e.g. <<Do you prefer bolder or lighter wines?>>.
-    Try not to repeat questions that have already been asked.
-    Politely let the user know you need some more information to make a suggestion.
+Use double angle brackets to reference the questions, e.g. <<Do you prefer bolder or lighter wines?>>.
+Try not to repeat questions that have already been asked.
+Politely let the user know you need some more information to make a suggestion.
 """
 
     def run(self, history: list[dict]):
+        openai.api_key = self.api_key
 
-        # Step 3(?) - Genereate keywords that can be used in search
-        search_keywords = mock_keywords()
+        # STEP 1 - Generate keywords from the user chat messages, this should capture what the user wants
+        chat_keywords: list[dict] = get_chat_keywords(
+            history=history, api_key=self.api_key)
+        log.info("Chat keywords retrieved: %s", chat_keywords["content"])
 
-        # Step 4(?) - Search Systembolaget
-        # This should probably be cached, should not make the same search if not needed. Could use embedding vectors to compare the key words generated.
-        # More advanced implementation could be to mimin ReAct paper, i.e. implement actions for to bot to take
-        products = systembolaget_search(search_keywords)
-        products = self.systemet_product_list_to_string([products[0]])
-        self.system_message = self.system_message.format(sources=products, follow_up_questions_prompt="whatever")
-        print(self.system_message)
+        # STEP 2 - Get embeddings for the keywords. This should probably be cached to save money.
+        keyword_embedding: list[float] = get_embedding(
+            chat_keywords["content"], engine=self.embedding_model)
 
-        # Step 5(?) - Get wine recommendation or follow up questions
+        # STEP 3 - Get wine data from vector database based on vector similarity
+        top_n_similar = self.data_store.search(
+            embedding=keyword_embedding, n=10)
+
+        top_n_similar_string = ""
+        for t in top_n_similar:
+            top_n_similar_string = top_n_similar_string + "Namn: " + t[0] + "; " + t[1] + "\n"
+        log.info("Data retrieved from datastore: " + "\n" +  top_n_similar_string)
+
+        # STEP 4 - Get wine recommendation or follow up questions. More advanced implementation could be to mimin ReAct paper, i.e. implement actions for to bot to take.
+        self.system_message = self.system_message.format(
+            sources=top_n_similar_string.strip(), follow_up_questions_prompt=self.follow_up_questions)
+
         messages = self.chat_history_chat_format(history)
-        completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)
+        completion = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo", messages=messages)
         reply = completion["choices"][0]["message"]["content"]
-        print(reply)
+        log.info("Assistant reply: " + "\n" + reply)
 
-        # Step 6 return response object
-        # Response object should look like {answer: OpenAI text response, products: raw list of products fetched from systembolaget, search_words: key words used to search systembolaget)
-        #return {"answer": reply, "products": products, "searchWords": search_keywords}
+        # STEP 5 return response object
+        # Response object should look like {answer: OpenAI text response, products: raw list of products fetched from datastore, search_keywords: key words used to search datastore)
+        return {"answer": reply, "products": top_n_similar_string, "searchWords": chat_keywords["content"]}
 
     def chat_history_chat_format(self, history: list[dict], approx_max_tokens=1000):
         messages_deque = deque()
         for h in reversed(history):
             messages_deque.appendleft(
-                {"role": "assistant", "content": h.get("answer")})
+                {"role": "assistant", "content": h.get("answer") if h.get("answer") else ""})
             messages_deque.appendleft(
                 {"role": "user", "content": h.get("question")})
         messages_deque.appendleft(
@@ -71,42 +95,26 @@ Wines:
 
 
 if __name__ == '__main__':
-    chat = ChatReadRetriveRead()
+    import os
+    from dotenv import load_dotenv
+    from data import SimpleDataStore
+
+    load_dotenv()
+
+    openai_api_key = os.environ.get('OPENAI_API_KEY')
+    dataImpl = SimpleDataStore(
+        csv="data/red_wines_filtered_with_embeddings.csv")
+    chatImpl = ChatReadRetriveRead(
+        data_store=dataImpl, openai_api_key=openai_api_key)
 
     h = [{
-        "question": "What's the weather like today?",
-        "answer": "Answer to What's the weather like today?",
+        "question": "I want a red wine.",
+        "answer": "I can help you with that. However I need to understand your preferences better. Do yo like fruity wines?",
     }, {
-        "question": "How about the weather for the next week?",
-        "answer": "Answer to How about the weather for the next week?",
+        "question": "Yes a fruity wine sounds nice.",
+        "answer": "Are you planning to eat something with the wine?",
     }, {
-        "question": "Today?",
-        "answer": "Answer to Today?"
+        "question": "We are going to eat lamb. Perhaps a wine from Italy."
     }]
 
-    p = [{
-        "namn": "Maison Robert Olivier, Vin Naturel Cuvée Tradition",
-        "land": "Frankrike",
-        "druvor": "Merlot",
-        "kategori": "Fruktigt & Smakrikt",
-        "smak": "Fruktig smak med inslag av svarta vinbär, färska örter, skogshallon, viol och blåbär.",
-        "passar till": "Lamm, Nöt, Grönsaker",
-        "fruktsyra": 9,
-        "fyllighet": 7,
-        "strävhet": 7
-    },
-    {
-        "namn": "Maison Robert Olivier, Vin Naturel Cuvée Tradition",
-        "land": "Frankrike",
-        "druvor": "Merlot",
-        "kategori": "Fruktigt & Smakrikt",
-        "smak": "Fruktig smak med inslag av svarta vinbär, färska örter, skogshallon, viol och blåbär.",
-        "passar till": "Lamm, Nöt, Grönsaker",
-        "fruktsyra": 9,
-        "fyllighet": 7,
-        "strävhet": 7
-    }]
-
-    #print(chat.chat_history_chat_format(h))
-    #print(chat.systemet_product_list_to_string(p))
-    chat.run(h)
+    #chatImpl.run(h)
