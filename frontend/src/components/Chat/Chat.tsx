@@ -26,14 +26,6 @@ export const Chat: React.FC = () => {
       { question: message, answer: result.answer },
     ]);
     console.log(result);
-
-    setTimeout(() => {
-      const answer = `Answer to "${message}"`; // replace this with real answer
-      setChatHistory((prevChatHistory) => [
-        ...prevChatHistory,
-        { question: message, answer },
-      ]);
-    }, 1000);
   };
 
   const onExampleClick = (example: string) => {
