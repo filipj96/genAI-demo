@@ -4,6 +4,11 @@
   max-width: 80%;
 }
 
+.assistant-message-loading {
+  display: flex;
+  justify-content: flex-start;
+}
+
 .assistant-message-content {
   background-color: #ffffff;
   border-radius: 5px;
