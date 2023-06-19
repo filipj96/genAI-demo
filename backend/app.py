@@ -17,11 +17,10 @@ app = Flask(__name__)
 def catch_all(path):
     return app.send_static_file("index.html")
 
-# The payload to this function should be a list of dictionaries contains user-assistant message pairs
 @app.route('/chat', methods=['POST'])
 def chat_endpoint():
-    payload = request.get_json()
-    r = chatImpl.run(payload)
+    payload: dict = request.get_json()
+    r = chatImpl.run(payload["history"])
     return jsonify(r)
 
 if __name__ == '__main__':
