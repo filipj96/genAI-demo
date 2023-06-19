@@ -50,11 +50,12 @@ Steg 4. Om du vet tillräckligt om användarens vinpreferenser så rekommenderar
     system_message_en = """You are a sommelier and you will give wine recommendations based on the user's input. You must follow these steps to give a recommendation to the user:
 
 Step 1. Understand the user's wine preferences based on the user's messages.
-Step 2. You need at least three user wine preferences to give a recommendation. If you receive fewer than three preferences, you should ask follow-up questions until you have 
-        enough information. Use the guidelines for follow-up questions in Step 3.
+
+Step 2. You need at least three user wine preferences to give a recommendation. If you receive fewer than three preferences, you should ask follow-up questions until you have enough information. Use the guidelines for follow-up questions in Step 3.
+
 Step 3. Guidelines for follow-up questions: They should be friendly and concise. Try not to repeat questions that have already been asked.
-Step 4. If you know enough about the user's wine preferences, you recommend one or two wines to the user. You may ONLY give wine recommendations based on the wine list attached 
-        in the chat (delimited with XML tags).
+
+Step 4. If you know enough about the user's wine preferences, you recommend one or two wines to the user. You may ONLY give wine recommendations based on the wine list below (delimited with XML tags).
 
 <wines>
 {sources}\n
@@ -91,10 +92,9 @@ Step 4. If you know enough about the user's wine preferences, you recommend one 
         messages = self.chat_history_chat_format(
             history, sys_message=system_message_formated)
         completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo", messages=messages, temperature=0.5)
+            model="gpt-3.5-turbo-0613", messages=messages, temperature=0.5)
         reply = completion["choices"][0]["message"]["content"]
         log.info("Assistant reply: " + "\n" + reply)
-        print(messages)
 
         # STEP 5 return response object
         # Response object should look like {answer: OpenAI text response, products: raw list of products fetched from datastore, search_keywords: key words used to search datastore)
@@ -111,18 +111,6 @@ Step 4. If you know enough about the user's wine preferences, you recommend one 
             {"role": "system", "content": sys_message})
 
         return list(messages_deque)
-
-    def systemet_product_list_to_string(self, systemet_product_list: list[dict]) -> str:
-        s = ""
-
-        for product in systemet_product_list:
-            for k, v in product.items():
-                if type(v) is not str:
-                    v = str(v)
-                s = s + k + ": " + v + "\n"
-            s = s + "-\n"
-        return s
-
 
 if __name__ == '__main__':
     import os
