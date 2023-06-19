@@ -16,12 +16,19 @@ log.setLevel(logging.INFO)
 
 class ChatReadRetriveRead():
 
-    def __init__(self, data_store, openai_api_key):
+    def __init__(self, data_store, openai_api_key, lang="en"):
         self.data_store = data_store
         self.api_key = openai_api_key
         self.embedding_model = "text-embedding-ada-002"
+        self.chat_completion_model = "gpt-3.5-turbo-0613"
+        self.lang = lang
 
-    system_message = """Assistant is a sommelier that suggests red wines to the user. Be brief in your answers and suggestions. Suggestions are ONLY allowed from the list of wines below. Assistant is NEVER allowed to suggest wines that are not in the provided list of wines. Assistant needs at least three user preferences to make a personal wine suggestion. If there is not enough information provided by the user for assistant to make a personal wine suggestion, do not make any suggestion. Instead say you need more information to make a suggestion and ask a follow-up question. When assistant does suggest a wine/s, it is enough to give the name of the wines. When assistant asks follow-up questions use the following guidelines:
+        if lang == "se":
+            self.system_message = self.system_message_sv
+        else:
+            self.system_message = self.system_message_en
+
+    system_message_en2 = """Assistant is a sommelier that suggests red wines to the user. Be brief in your answers and suggestions. Suggestions are ONLY allowed from the list of wines below. Assistant is NEVER allowed to suggest wines that are not in the provided list of wines. Assistant needs at least three user preferences to make a personal wine suggestion. If there is not enough information provided by the user for assistant to make a personal wine suggestion, do not make any suggestion. Instead say you need more information to make a suggestion and ask a follow-up question. When assistant does suggest a wine/s, it is enough to give the name of the wines. When assistant asks follow-up questions use the following guidelines:
 Generate three very brief follow-up questions that will help you make a wine suggestion. 
 Use double angle brackets to reference the questions, e.g. <<Do you prefer bolder or lighter wines?>>.
 Try not to repeat questions that have already been asked.
@@ -67,7 +74,7 @@ Step 4. If you know enough about the user's wine preferences, you recommend one 
 
         # STEP 1 - Generate keywords from the user chat messages, this should capture what the user wants
         chat_keywords: list[dict] = get_chat_keywords(
-            history=history, api_key=self.api_key)
+            history=history, api_key=self.api_key, lang=self.lang)
         log.info("Chat keywords retrieved: %s", chat_keywords["content"])
 
         # STEP 2 - Get embeddings for the keywords. This should probably be cached to save money.
@@ -86,13 +93,13 @@ Step 4. If you know enough about the user's wine preferences, you recommend one 
                  "\n" + top_n_similar_string)
 
         # STEP 4 - Get wine recommendation or follow up questions. More advanced implementation could be to mimin ReAct paper, i.e. implement actions for to bot to take.
-        system_message_formated = self.system_message_sv.format(
+        system_message_formated = self.system_message.format(
             sources=top_n_similar_string.strip())
 
         messages = self.chat_history_chat_format(
             history, sys_message=system_message_formated)
         completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo-0613", messages=messages, temperature=0.5)
+            model=self.chat_completion_model, messages=messages, temperature=0.5)
         reply = completion["choices"][0]["message"]["content"]
         log.info("Assistant reply: " + "\n" + reply)
 
@@ -100,7 +107,7 @@ Step 4. If you know enough about the user's wine preferences, you recommend one 
         # Response object should look like {answer: OpenAI text response, products: raw list of products fetched from datastore, search_keywords: key words used to search datastore)
         return {"answer": reply, "products": top_n_similar_string, "searchWords": chat_keywords["content"]}
 
-    def chat_history_chat_format(self, history: list[dict], sys_message: str, approx_max_tokens=1000):
+    def chat_history_chat_format(self, history: list[dict], sys_message: str,  approx_max_tokens=1000):
         messages_deque = deque()
         for h in reversed(history):
             messages_deque.appendleft(
@@ -111,6 +118,7 @@ Step 4. If you know enough about the user's wine preferences, you recommend one 
             {"role": "system", "content": sys_message})
 
         return list(messages_deque)
+
 
 if __name__ == '__main__':
     import os
@@ -135,4 +143,5 @@ if __name__ == '__main__':
         "question": "We are going to eat lamb. Perhaps a wine from Italy."
     }]
 
+    print(chatImpl.system_message)
     # chatImpl.run(h)
