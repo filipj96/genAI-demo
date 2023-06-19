@@ -16,8 +16,8 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
   return (
     <div className="assistant-message">
       <div className="assistant-message-content">
-        {parsedAnswer.parsedAnswer}
-        {parsedAnswer.followupQuestions && parsedAnswer.followupQuestions.length > 0 && (
+        {!onFollowUpClick ? message : parsedAnswer.parsedAnswer}
+        {onFollowUpClick && parsedAnswer.followupQuestions && parsedAnswer.followupQuestions.length > 0 && (
           <div className="follow-up-questions">
             <span>Follow up questions: </span>
             {parsedAnswer.followupQuestions.map((followUpQuestion, index) => (

@@ -73,7 +73,6 @@ export const Chat: React.FC = () => {
                 <UserMessage message={ChatTurn.question} />
                 <AssistantMessage
                   message={ChatTurn.answer}
-                  onFollowUpClick={handleSubmit}
                 />
               </div>
             ))}
