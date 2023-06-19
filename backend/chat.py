@@ -21,18 +21,44 @@ class ChatReadRetriveRead():
         self.api_key = openai_api_key
         self.embedding_model = "text-embedding-ada-002"
 
-    system_message = """Assistant is a sommelier that suggests red wines to the customer. Be brief in your answers and suggestions.
-Suggestions are ONLY allowed from the list of wines below. If there is not enough information below to make a wine suggestion, say you need more information to suggest. If asking a follow-up question to the user would help, ask the question.
-Do not generate answers that do not use the wine list below. When assistant does suggest a wine/s, it is enough to give the name of the wines.
-{follow_up_questions_prompt}\n
-Wines:
-{sources}\n
-"""
-
-    follow_up_questions = """Generate three very brief follow-up questions that will help you make a wine suggestion. 
+    system_message = """Assistant is a sommelier that suggests red wines to the user. Be brief in your answers and suggestions. Suggestions are ONLY allowed from the list of wines below. Assistant is NEVER allowed to suggest wines that are not in the provided list of wines. Assistant needs at least three user preferences to make a personal wine suggestion. If there is not enough information provided by the user for assistant to make a personal wine suggestion, do not make any suggestion. Instead say you need more information to make a suggestion and ask a follow-up question. When assistant does suggest a wine/s, it is enough to give the name of the wines. When assistant asks follow-up questions use the following guidelines:
+Generate three very brief follow-up questions that will help you make a wine suggestion. 
 Use double angle brackets to reference the questions, e.g. <<Do you prefer bolder or lighter wines?>>.
 Try not to repeat questions that have already been asked.
 Politely let the user know you need some more information to make a suggestion.
+
+<wines>
+{sources}\n
+</wines>
+"""
+
+    system_message_sv = """Du är en sommelier och ska ge vinrekommendationer baserat på användarens input. Du måste följa dessa steg för att ge rekommendation till användaren:
+
+Steg 1. Förstå vilka preferenser användaren har för vinet baserat på användarens meddelanden.
+
+Steg 2. Du behöver minst tre stycken användarpreferenser för vin för att ge en rekommendation. Får du mindre än tre preferenser ska du ställa följdfrågor tills du har tillräckligt med information. Använda riktlinjerna för följdfråg i Steg 3.
+
+Steg 3. Riktlinjer för följdfrågor: De ska vara vänliga och kortfattade. Försök att inte upprepa frågor som redan har ställts.
+
+Steg 4. Om du vet tillräckligt om användarens vinpreferenser så rekommenderar du ett eller två viner till användaren. Du får ENDAST ge vinrekommendationer utifrån vinlistan som bifogas i chatten (avgränsas med XML-taggar).
+
+<viner>
+{sources}\n
+</viner>
+"""
+
+    system_message_en = """You are a sommelier and you will give wine recommendations based on the user's input. You must follow these steps to give a recommendation to the user:
+
+Step 1. Understand the user's wine preferences based on the user's messages.
+Step 2. You need at least three user wine preferences to give a recommendation. If you receive fewer than three preferences, you should ask follow-up questions until you have 
+        enough information. Use the guidelines for follow-up questions in Step 3.
+Step 3. Guidelines for follow-up questions: They should be friendly and concise. Try not to repeat questions that have already been asked.
+Step 4. If you know enough about the user's wine preferences, you recommend one or two wines to the user. You may ONLY give wine recommendations based on the wine list attached 
+        in the chat (delimited with XML tags).
+
+<wines>
+{sources}\n
+</wines>
 """
 
     def run(self, history: list[dict]):
@@ -53,24 +79,28 @@ Politely let the user know you need some more information to make a suggestion.
 
         top_n_similar_string = ""
         for t in top_n_similar:
-            top_n_similar_string = top_n_similar_string + "Namn: " + t[0] + "; " + t[1] + "\n"
-        log.info("Data retrieved from datastore: " + "\n" +  top_n_similar_string)
+            top_n_similar_string = top_n_similar_string + \
+                "Namn: " + t[0] + "; " + t[1] + "\n"
+        log.info("Data retrieved from datastore: " +
+                 "\n" + top_n_similar_string)
 
         # STEP 4 - Get wine recommendation or follow up questions. More advanced implementation could be to mimin ReAct paper, i.e. implement actions for to bot to take.
-        self.system_message = self.system_message.format(
-            sources=top_n_similar_string.strip(), follow_up_questions_prompt=self.follow_up_questions)
+        system_message_formated = self.system_message_sv.format(
+            sources=top_n_similar_string.strip())
 
-        messages = self.chat_history_chat_format(history)
+        messages = self.chat_history_chat_format(
+            history, sys_message=system_message_formated)
         completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo", messages=messages)
+            model="gpt-3.5-turbo", messages=messages, temperature=0.5)
         reply = completion["choices"][0]["message"]["content"]
         log.info("Assistant reply: " + "\n" + reply)
+        print(messages)
 
         # STEP 5 return response object
         # Response object should look like {answer: OpenAI text response, products: raw list of products fetched from datastore, search_keywords: key words used to search datastore)
         return {"answer": reply, "products": top_n_similar_string, "searchWords": chat_keywords["content"]}
 
-    def chat_history_chat_format(self, history: list[dict], approx_max_tokens=1000):
+    def chat_history_chat_format(self, history: list[dict], sys_message: str, approx_max_tokens=1000):
         messages_deque = deque()
         for h in reversed(history):
             messages_deque.appendleft(
@@ -78,7 +108,7 @@ Politely let the user know you need some more information to make a suggestion.
             messages_deque.appendleft(
                 {"role": "user", "content": h.get("question")})
         messages_deque.appendleft(
-            {"role": "system", "content": self.system_message})
+            {"role": "system", "content": sys_message})
 
         return list(messages_deque)
 
@@ -117,4 +147,4 @@ if __name__ == '__main__':
         "question": "We are going to eat lamb. Perhaps a wine from Italy."
     }]
 
-    #chatImpl.run(h)
+    # chatImpl.run(h)

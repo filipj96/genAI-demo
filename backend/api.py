@@ -53,13 +53,18 @@ def get_chat_keywords(history: list[dict], api_key: str) -> list[dict]:
     keyword_system_message = """Assistant is a sommelier that creates keywords from customer messages about wine. The keyword should help assistant understand what type of wine the customer is looking for.
 Only generate keywords separated by commas, nothing else. ONLY generate keywords relevant for a wine suggestion.
 """
+
+    keyword_system_message_sv = """Assistenten är en sommelier som skapar nyckelord från användarmeddelanden om vin. Nyckelorden ska hjälpa assistenten att förstå vilken typ av vin användaren letar efter.
+Generera ENDAST nyckelord separerade med kommatecken, inget annat. Generera ENDAST nyckelord som är relevanta för ett vinförslag.
+"""
+
     openai_model = "gpt-3.5-turbo"
     user_messages_deque = deque()
     for h in reversed(history):
         user_messages_deque.appendleft(
             {"role": "user", "content": h.get("question")})
     user_messages_deque.appendleft(
-        {"role": "system", "content": keyword_system_message})
+        {"role": "system", "content": keyword_system_message_sv})
 
     openai.api_key = api_key
     completion = openai.ChatCompletion.create(
