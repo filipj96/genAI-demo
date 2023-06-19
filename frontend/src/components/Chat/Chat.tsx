@@ -6,7 +6,6 @@ import { UserMessage } from "../UserMessage/UserMessage";
 import { AssistantMessage, AssistantMessageLoading } from "../AssistantMessage";
 import { ChatHeader } from "../ChatHeader";
 import { ChatRequest, AskResponse, ChatTurn, chatApi } from "../../api";
-import { Spinner } from "@fluentui/react-components";
 
 export const Chat: React.FC = () => {
   const currentQuestion = useRef("");
@@ -65,7 +64,7 @@ export const Chat: React.FC = () => {
       <div className="chat-window">
         <ChatHeader onClearChat={handleClearChat} />
         <div className="chat-content">
-          {chatHistory.length === 0 ? (
+          {!currentQuestion.current ? (
             <ChatIntro onExampleClick={onExampleClick} />
           ) : (
             <div>
