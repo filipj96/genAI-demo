@@ -7,9 +7,8 @@ interface ChatIntroProps {
 
 export const ChatIntro: React.FC<ChatIntroProps> = ({ onExampleClick }) => {
   const examples = [
-    "Ett rött vin som passar till grillat lamm",
-    "Ett franskt balkongvin, rött",
-    "Ett gott vin från Spanien",
+    "Recommend a french wine made from the Pinot Noir grape",
+    "I want a wine that goes well with steak",
   ];
 
   return (

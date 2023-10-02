@@ -16,7 +16,11 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
   return (
     <div className="assistant-message">
       <div className="assistant-message-content">
-        {!onFollowUpClick ? message : parsedAnswer.parsedAnswer}
+        {(!onFollowUpClick ? message : parsedAnswer.parsedAnswer).split('\n').map(parsedLine => (
+          <p>
+            {parsedLine}
+          </p>
+        ))}
         {onFollowUpClick && parsedAnswer.followupQuestions && parsedAnswer.followupQuestions.length > 0 && (
           <div className="follow-up-questions">
             <span>Follow up questions: </span>

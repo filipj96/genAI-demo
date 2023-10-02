@@ -19,10 +19,10 @@ chatImpl = ChatReadRetriveRead(data_store=dataImpl, openai_api_key=openai_api_ke
 
 app = Flask(__name__)
 
-@app.route('/', defaults={'path': ''})
+@app.route('/', defaults={'path': 'index.html'})
 @app.route('/<path:path>')
 def catch_all(path):
-    return app.send_static_file("index.html")
+    return app.send_static_file(path)
 
 @app.route('/chat', methods=['POST'])
 def chat_endpoint():
